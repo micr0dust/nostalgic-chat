@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>懷舊聊天室</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-container">
+        <h1>歡迎來到懷舊聊天室</h1>
+        <p>請輸入您的暱稱（至少2個字元）：</p>
+        <input type="text" id="nickname-input" placeholder="輸入暱稱..." maxlength="20">
+        <button id="enter-button">進入聊天室</button>
+        <p id="login-error" class="error-message"></p>
+    </div>
+
+    <div id="chat-container" style="display: none;">
+        <div id="chat-area">
+            <h2>聊天內容</h2>
+            <div id="chat-messages">
+                <!-- 聊天訊息會顯示在這裡 -->
+            </div>
+        </div>
+        <div id="sidebar">
+            <h2>在線人員</h2>
+            <ul id="user-list">
+                <!-- 在線用戶列表會顯示在這裡 -->
+            </ul>
+            <div id="message-input-area">
+                <textarea id="message-input" placeholder="輸入訊息... 按 Enter 發送" rows="3"></textarea>
+                <button id="send-button">發送</button>
+            </div>
+             <p id="connection-status" class="status-message"></p>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>

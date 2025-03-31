@@ -1,0 +1,185 @@
+/* style.css */
+body {
+    font-family: 'Verdana', '微軟正黑體', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#login-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    border: 1px solid #ccc;
+}
+
+#login-container h1 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#login-container p {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+#nickname-input {
+    padding: 10px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 110px); /* 調整寬度以適應按鈕 */
+    box-sizing: border-box; /* 包含 padding 和 border */
+}
+
+#enter-button, #send-button {
+    padding: 10px 15px;
+    background-color: #5c8dff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#enter-button:hover, #send-button:hover {
+    background-color: #4a78d1;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 10px;
+    min-height: 1.2em; /* 避免佈局跳動 */
+}
+
+#chat-container {
+    display: flex;
+    width: 90%;
+    max-width: 1000px;
+    height: 80vh;
+    max-height: 700px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+    overflow: hidden; /* 確保內容不溢出 */
+    border: 1px solid #bbb;
+}
+
+#chat-area {
+    flex: 3; /* 佔用較大空間 */
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+#chat-area h2, #sidebar h2 {
+    padding: 15px;
+    margin: 0;
+    background-color: #e0e0e0;
+    border-bottom: 1px solid #ccc;
+    font-size: 1.1em;
+    color: #444;
+    text-align: center;
+}
+
+#chat-messages {
+    flex-grow: 1; /* 填滿剩餘空間 */
+    overflow-y: auto; /* 超出內容時顯示滾動條 */
+    padding: 15px;
+    background-color: #ffffff; /* 白色聊天背景 */
+}
+
+#chat-messages div {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    word-wrap: break-word; /* 長單詞或連結換行 */
+}
+
+/* 使圖片和視頻適應寬度 */
+#chat-messages img,
+#chat-messages video,
+#chat-messages iframe {
+    max-width: 90%; /* 不要完全佔滿，留點邊距 */
+    height: auto;
+    display: block; /* 避免下方多餘空間 */
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #eee; /* 可選：給媒體加個邊框 */
+}
+
+.message-chat strong {
+    color: #007bff; /* 暱稱顏色 */
+}
+.message-chat {
+    background-color: #e7f3ff; /* 聊天訊息背景 */
+    border: 1px solid #d0e0f0;
+}
+.message-system {
+    font-style: italic;
+    color: #666;
+    background-color: #f0f0f0; /* 系統訊息背景 */
+    text-align: center;
+    font-size: 0.9em;
+    border: 1px solid #e0e0e0;
+}
+
+#sidebar {
+    flex: 1; /* 佔用較小空間 */
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+}
+
+#user-list {
+    list-style: none;
+    padding: 15px;
+    margin: 0;
+    overflow-y: auto; /* 用戶多時可滾動 */
+    flex-grow: 1;
+}
+
+#user-list li {
+    padding: 5px 0;
+    color: #333;
+    border-bottom: 1px dashed #ddd; /* 懷舊分隔線 */
+}
+#user-list li:last-child {
+    border-bottom: none;
+}
+
+#message-input-area {
+    padding: 15px;
+    border-top: 1px solid #ccc;
+    background-color: #e0e0e0;
+}
+
+#message-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none; /* 禁止調整大小 */
+    box-sizing: border-box; /* 包含 padding 和 border */
+    margin-bottom: 10px;
+    font-family: inherit; /* 繼承 body 字體 */
+}
+
+#send-button {
+    width: 100%;
+}
+
+.status-message {
+    padding: 5px 15px;
+    font-size: 0.8em;
+    color: #888;
+    text-align: center;
+}
