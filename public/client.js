@@ -39,11 +39,16 @@ function attemptLogin() {
 
 // --- WebSocket 連接與處理 ---
 function connectWebSocket() {
-    // --- 重要：請根據你的伺服器地址修改 ---
-    // 如果伺服器在本機運行，通常是 'ws://localhost:8080'
-    // 如果部署到伺服器，則需要換成 'ws://your-server-address:port' 或 'wss://your-secure-server-address'
-    const wsUrl = `ws://${window.location.hostname}:8080`; // 自動偵測主機名
-    // const wsUrl = 'ws://localhost:8080'; // 或者直接指定
+    // --- 動態生成 WebSocket URL ---
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'; // 判斷是 http 還是 https
+    const wsHost = window.location.host; // 使用當前頁面的主機名 (例如 your-project-name.glitch.me)
+    const wsUrl = `${wsProtocol}//${wsHost}`; // Glitch 會將 WSS 請求路由到你的應用端口
+
+    console.log(`嘗試連接到: ${wsUrl}`); // 調試輸出
+
+    // --- 重要：移除或註釋掉舊的本地 URL ---
+    // const wsUrl = `ws://${window.location.hostname}:8080`; // 舊的本地代碼
+    // const wsUrl = 'ws://localhost:8080'; // 舊的本地代碼
 
     ws = new WebSocket(wsUrl);
 
@@ -51,71 +56,44 @@ function connectWebSocket() {
         console.log('WebSocket 連接已建立');
         connectionStatus.textContent = '連接成功！正在登入...';
         // 發送登入訊息給伺服器
-        ws.send(JSON.stringify({ type: 'login', nickname: nickname }));
-    };
-
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            console.log('收到伺服器訊息:', data); // 調試用
-
-            switch (data.type) {
-                case 'login_error': // 處理登入錯誤 (例如暱稱重複)
-                    handleLoginError(data.message);
-                    break;
-                case 'system':
-                    appendMessage(data.message, 'system');
-                    // 檢查是否是自己的登入成功訊息
-                    if (data.message.includes(`您已成功進入聊天室，暱稱為 "${nickname}"`)) {
-                         showChatInterface(); // 只有在確認登入成功後才顯示聊天介面
-                    }
-                    break;
-                case 'chat':
-                    appendMessage(`<strong>${escapeHtml(data.nickname)}:</strong> ${data.message}`, 'chat');
-                    break;
-                case 'userlist':
-                    updateUserList(data.users);
-                    break;
-                 case 'error': // 處理伺服器發來的其他錯誤
-                    console.error('伺服器錯誤:', data.message);
-                    appendMessage(`伺服器錯誤: ${escapeHtml(data.message)}`, 'system');
-                    break;
-                default:
-                    console.log('收到未知類型的訊息:', data.type);
-            }
-        } catch (error) {
-            console.error('處理伺服器訊息失敗:', error);
-            appendMessage('收到無法解析的訊息', 'system');
+        if (nickname) { // 確保 nickname 存在
+             ws.send(JSON.stringify({ type: 'login', nickname: nickname }));
+        } else {
+             console.error("嘗試發送登入訊息時暱稱為空");
+             handleLoginError("內部錯誤：無法獲取暱稱");
+             ws.close();
         }
     };
 
+    // ... (ws.onmessage, ws.onclose, ws.onerror 保持不變) ...
     ws.onclose = (event) => {
         console.log('WebSocket 連接已關閉:', event.reason || `Code: ${event.code}`);
-        connectionStatus.textContent = `連接已斷開 (${event.reason || `Code: ${event.code}`})。請重新整理頁面。`;
-        // 可以在這裡禁用輸入框和發送按鈕
+        const reason = event.reason || `Code: ${event.code}`;
+        connectionStatus.textContent = `連接已斷開 (${reason})。如需重連請刷新頁面。`;
         messageInput.disabled = true;
         sendButton.disabled = true;
-        // 如果不是因為登入錯誤而關閉，則顯示聊天介面已斷開
-        if (!loginError.textContent) { // 避免覆蓋登入錯誤
+        if (!loginError.textContent && chatContainer.style.display !== 'none') {
             appendMessage('您已與伺服器斷開連接。', 'system');
         }
-        // 可以選擇隱藏聊天介面，顯示登入介面
+        // 不自動隱藏聊天介面，讓用戶知道連接斷了
         // hideChatInterface();
+        ws = null; // 清除引用
     };
 
-    ws.onerror = (error) => {
+     ws.onerror = (error) => {
         console.error('WebSocket 錯誤:', error);
-        connectionStatus.textContent = '連接錯誤，請檢查伺服器是否運行或網路連線。';
-        // 如果尚未登入成功，顯示在登入錯誤區
+        const errorMsg = '無法連接到聊天伺服器或連接中斷。請檢查網路或刷新頁面。';
+        connectionStatus.textContent = '連接錯誤。';
         if (loginContainer.style.display !== 'none') {
-             loginError.textContent = '無法連接到聊天伺服器。';
+             loginError.textContent = errorMsg;
         } else {
              appendMessage('與伺服器的連接發生錯誤。', 'system');
         }
-        // 關閉可能存在的 ws 連接
-        if (ws && ws.readyState !== WebSocket.CLOSED) {
+        // 確保關閉
+        if (ws && ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
             ws.close();
         }
+        ws = null; // 清除引用
     };
 }
 

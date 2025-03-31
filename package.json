@@ -1,16 +1,20 @@
 {
   "name": "nostalgic-chat",
   "version": "1.0.0",
-  "description": "",
+  "description": "一個懷舊風格的 WebSocket 聊天室",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["chat", "websocket", "nostalgic", "glitch"],
+  "author": "Microdust",
+  "license": "MIT",
   "dependencies": {
+    "express": "^4.21.2",
     "ws": "^8.18.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
