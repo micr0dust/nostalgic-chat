@@ -10,7 +10,7 @@ A simple web chatroom built with Node.js and WebSocket, allowing users to join w
 
 ## 截圖預覽 (Screenshot)
 
-![聊天室截圖](screenshot.jpg)
+![聊天室截圖](./public/img/screenshot.jpg)
 
 ## 主要功能 (Features)
 
