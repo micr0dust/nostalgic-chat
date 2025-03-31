@@ -42,10 +42,9 @@ A simple web chatroom built with Node.js and WebSocket, allowing users to join w
 
 1.  **克隆倉庫 (Clone the repository):**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/nostalgic-chat.git 
+    git clone https://github.com/micr0dust/nostalgic-chat.git 
     cd nostalgic-chat
     ```
-    *(請將 `YOUR_USERNAME` 替換為你的 GitHub 用戶名)*
 
 2.  **安裝依賴 (Install dependencies):**
     ```bash
@@ -75,5 +74,4 @@ A simple web chatroom built with Node.js and WebSocket, allowing users to join w
 
 ## 授權 (License)
 
-[MIT](LICENSE) 
-*(如果你的倉庫中沒有 LICENSE 文件，可以移除此連結或選擇一個合適的開源許可證)*
+[MIT](LICENSE)
