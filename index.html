@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 對話紀錄 - 懷舊聊天室</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .chat-log {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden; /* Contain child margins */
+        }
+        h1 {
+            text-align: center;
+            padding: 15px;
+            margin: 0;
+            background-color: #e9e9e9;
+            border-bottom: 1px solid #ddd;
+            font-size: 1.4em;
+        }
+        .turn {
+            padding: 15px;
+            margin: 10px;
+            border-radius: 6px;
+            position: relative; /* For speaker label positioning */
+        }
+        .user-turn {
+            background-color: #e1f5fe; /* Light blue for user */
+            margin-left: 40px; /* Indent user messages slightly less */
+        }
+        .model-turn {
+            background-color: #f0f4c3; /* Light green/yellow for model */
+            margin-right: 40px; /* Indent model messages slightly less */
+        }
+        .speaker {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .user-turn .speaker {
+            color: #0277bd;
+        }
+        .model-turn .speaker {
+            color: #7cb342;
+        }
+        .content p {
+            margin: 0 0 10px 0;
+        }
+        .content p:last-child {
+            margin-bottom: 0;
+        }
+        .content ul, .content ol {
+            margin-top: 0;
+            margin-bottom: 10px;
+            padding-left: 25px;
+        }
+        .content li {
+            margin-bottom: 5px;
+        }
+        .content pre {
+            background-color: #2d2d2d; /* Dark background for code */
+            color: #f0f0f0; /* Light text for code */
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto; /* Allow horizontal scrolling for long code lines */
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid #444;
+        }
+        .content code {
+             font-family: monospace;
+        }
+        .content pre code {
+            background-color: transparent; /* Don't double background */
+            padding: 0;
+            border: none;
+            color: inherit; /* Inherit color from pre */
+        }
+        .content .inline-code {
+            background-color: #eee;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid #ddd;
+        }
+        .content hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 15px 0;
+        }
+        .content a {
+            color: #1a0dab;
+            text-decoration: none;
+        }
+        .content a:hover {
+            text-decoration: underline;
+        }
+         /* Ignore the Gemini specific UI elements if any leak through */
+        .actions-container, .turn-footer, .thought-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-log">
+    <h1>Gemini 對話紀錄 - 懷舊聊天室</h1>
+
+    <!-- Turn 1: User -->
+    <div class="turn user-turn">
+        <div class="speaker">User:</div>
+        <div class="content">
+            <p>請編寫一個懷舊的聊天室程序，要求：每一個進入的人無需註冊，但必須給自己取個名字，如果未填入名稱，會彈出提示“請填寫您的暱稱”。</p>
+            <p>填寫不少於2個字元的暱稱後，允許進入聊天室。</p>
+            <p>聊天室的左側是聊天內容，右側是線上人員清單。聊天內容列表應該支援html代碼運行，支援貼上顯示圖片、視頻等鏈接，方便分享。</p>
+            <p>所有的聊天內容在登出後清除，重新登入只能看到最新的聊天內容，不能查看更早的內容。</p>
+        </div>
+    </div>
+
+    <!-- Turn 2: Model (Response with code) -->
+    <div class="turn model-turn">
+        <div class="speaker">Gemini:</div>
+        <div class="content">
+            <p>好的，這是一個使用 HTML、CSS、JavaScript（前端）和 Node.js 搭配 <span class="inline-code">ws</span> 函式庫（後端）實現的簡單懷舊聊天室範例。</p>
+            <p><strong>核心功能：</strong></p>
+            <ol>
+                <li>
+                    <p><strong>前端 (HTML, CSS, JS):</strong></p>
+                    <ul>
+                        <li>提供暱稱輸入介面。</li>
+                        <li>驗證暱稱（至少2個字元）。</li>
+                        <li>顯示聊天介面（左側聊天內容，右側用戶列表）。</li>
+                        <li>使用 WebSocket 與後端通訊。</li>
+                        <li>發送和接收訊息。</li>
+                        <li>使用 <span class="inline-code">innerHTML</span> 渲染聊天內容以支援 HTML。</li>
+                        <li>更新在線用戶列表。</li>
+                    </ul>
+                </li>
+                <li>
+                    <p><strong>後端 (Node.js + ws):</strong></p>
+                    <ul>
+                        <li>建立 WebSocket 伺服器。</li>
+                        <li>管理連接的客戶端及其暱稱。</li>
+                        <li>廣播聊天訊息給所有客戶端。</li>
+                        <li>廣播用戶加入/離開的系統訊息。</li>
+                        <li>廣播最新的在線用戶列表。</li>
+                        <li><strong>不儲存任何聊天記錄</strong>，符合登出後清除的要求。</li>
+                    </ul>
+                </li>
+            </ol>
+            <hr>
+            <p><strong>檔案結構：</strong></p>
+            <pre><code>nostalgic-chat/
+├── server.js         # 後端 Node.js 伺服器
+├── public/
+│   ├── index.html    # 前端 HTML 結構
+│   ├── style.css     # 前端 CSS 樣式
+│   └── client.js     # 前端 JavaScript 邏輯
+└── package.json      # Node.js 項目配置 (npm init -y 後生成)</code></pre>
+            <hr>
+            <p><strong>1. 後端：</strong><span class="inline-code">server.js</span></p>
+            <pre><code>// server.js
+const WebSocket = require('ws');
+
+const wss = new WebSocket.Server({ port: 8080 });
+const clients = new Map(); // 使用 Map 來儲存 ws 連線和對應的暱稱
+
+console.log('懷舊聊天室伺服器已啟動於 ws://localhost:8080');
+
+wss.on('connection', (ws) =&gt; {
+    console.log('一個客戶端嘗試連接...');
+
+    ws.on('message', (message) =&gt; {
+        try {
+            const data = JSON.parse(message);
+            console.log('收到訊息:', data);
+
+            switch (data.type) {
+                case 'login':
+                    handleLogin(ws, data.nickname);
+                    break;
+                case 'message':
+                    handleMessage(ws, data.text);
+                    break;
+                default:
+                    console.log('收到未知類型的訊息:', data.type);
+            }
+        } catch (error) {
+            console.error('處理訊息失敗:', error);
+            // 可以選擇發送錯誤訊息回客戶端或直接關閉連接
+            // ws.send(JSON.stringify({ type: 'error', message: '無效的訊息格式' }));
+        }
+    });
+
+    ws.on('close', () =&gt; {
+        handleLogout(ws);
+    });
+
+    ws.on('error', (error) =&gt; {
+        console.error('WebSocket 錯誤:', error);
+        handleLogout(ws); // 出錯時也嘗試處理登出
+    });
+});
+
+function handleLogin(ws, nickname) {
+    // 簡單檢查暱稱是否已被使用 (可選，但建議)
+    for (const existingNickname of clients.values()) {
+        if (existingNickname === nickname) {
+            ws.send(JSON.stringify({ type: 'login_error', message: `暱稱 "${nickname}" 已被使用，請換一個！` }));
+            ws.close(); // 關閉重複暱稱的連接
+            console.log(`暱稱 ${nickname} 重複，拒絕連接。`);
+            return;
+        }
+    }
+
+    clients.set(ws, nickname); // 將 ws 連線與暱稱關聯起來
+    console.log(`用戶 "${nickname}" 加入了聊天室`);
+
+    // 向所有客戶端廣播新用戶加入的系統訊息
+    broadcast({
+        type: 'system',
+        message: `歡迎 "${nickname}" 加入聊天室！`
+    });
+
+    // 向所有客戶端廣播更新後的用戶列表
+    broadcastUserList();
+
+     // (可選) 向剛登入的用戶發送歡迎訊息
+     ws.send(JSON.stringify({
+        type: 'system',
+        message: `您已成功進入聊天室，暱稱為 "${nickname}"`
+    }));
+}
+
+function handleMessage(ws, text) {
+    const nickname = clients.get(ws);
+    if (!nickname) {
+        console.log('收到來自未登入用戶的訊息，忽略。');
+        return; // 如果發送者未登入（理論上不應發生），則忽略
+    }
+
+    if (!text || text.trim() === '') {
+        return; // 忽略空訊息
+    }
+
+    console.log(`"${nickname}" 說: ${text}`);
+    // 向所有客戶端廣播聊天訊息
+    broadcast({
+        type: 'chat',
+        nickname: nickname,
+        message: text // 直接傳遞原始文本，讓前端處理 HTML
+    });
+}
+
+function handleLogout(ws) {
+    const nickname = clients.get(ws);
+    if (nickname) {
+        console.log(`用戶 "${nickname}" 離開了聊天室`);
+        clients.delete(ws); // 從 Map 中移除客戶端
+
+        // 向所有剩餘客戶端廣播用戶離開的系統訊息
+        broadcast({
+            type: 'system',
+            message: `"${nickname}" 離開了聊天室。`
+        });
+
+        // 向所有剩餘客戶端廣播更新後的用戶列表
+        broadcastUserList();
+    } else {
+        console.log('一個未登入的客戶端斷開連接。');
+    }
+}
+
+// 廣播訊息給所有連接的客戶端
+function broadcast(data) {
+    const messageString = JSON.stringify(data);
+    // console.log('廣播訊息:', messageString); // 調試用
+    wss.clients.forEach((client) =&gt; {
+        // 只有處於 OPEN 狀態的客戶端才能接收訊息
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(messageString);
+        }
+    });
+}
+
+// 廣播當前在線用戶列表
+function broadcastUserList() {
+    const userList = Array.from(clients.values()); // 從 Map 的 values (暱稱) 創建陣列
+    broadcast({
+        type: 'userlist',
+        users: userList
+    });
+}
+
+// 定期 PING 客戶端以保持連接 (可選，但有助於檢測死連接)
+/*
+setInterval(() =&gt; {
+  wss.clients.forEach((client) =&gt; {
+    if (client.isAlive === false) return client.terminate();
+    client.isAlive = false; // 假設死亡，等待 pong 回應
+    client.ping(() =&gt; {}); // 發送 ping
+  });
+}, 30000); // 每 30 秒 ping 一次
+
+wss.on('connection', (ws) =&gt; {
+  ws.isAlive = true;
+  ws.on('pong', () =&gt; {
+    ws.isAlive = true; // 收到 pong，標記為存活
+  });
+  // ... 其他事件處理器
+});
+*/</code></pre>
+            <hr>
+            <p><strong>2. 前端：</strong><span class="inline-code">public/index.html</span></p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-TW"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;懷舊聊天室&lt;/title&gt;
+    &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id="login-container"&gt;
+        &lt;h1&gt;歡迎來到懷舊聊天室&lt;/h1&gt;
+        &lt;p&gt;請輸入您的暱稱（至少2個字元）：&lt;/p&gt;
+        &lt;input type="text" id="nickname-input" placeholder="輸入暱稱..." maxlength="20"&gt;
+        &lt;button id="enter-button"&gt;進入聊天室&lt;/button&gt;
+        &lt;p id="login-error" class="error-message"&gt;&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div id="chat-container" style="display: none;"&gt;
+        &lt;div id="chat-area"&gt;
+            &lt;h2&gt;聊天內容&lt;/h2&gt;
+            &lt;div id="chat-messages"&gt;
+                &lt;!-- 聊天訊息會顯示在這裡 --&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div id="sidebar"&gt;
+            &lt;h2&gt;在線人員&lt;/h2&gt;
+            &lt;ul id="user-list"&gt;
+                &lt;!-- 在線用戶列表會顯示在這裡 --&gt;
+            &lt;/ul&gt;
+            &lt;div id="message-input-area"&gt;
+                &lt;textarea id="message-input" placeholder="輸入訊息... 按 Enter 發送" rows="3"&gt;&lt;/textarea&gt;
+                &lt;button id="send-button"&gt;發送&lt;/button&gt;
+            &lt;/div&gt;
+             &lt;p id="connection-status" class="status-message"&gt;&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script src="client.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <hr>
+            <p><strong>3. 前端：</strong><span class="inline-code">public/style.css</span></p>
+            <pre><code>/* style.css */
+body {
+    font-family: 'Verdana', '微軟正黑體', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#login-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    border: 1px solid #ccc;
+}
+
+#login-container h1 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#login-container p {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+#nickname-input {
+    padding: 10px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 110px); /* 調整寬度以適應按鈕 */
+    box-sizing: border-box; /* 包含 padding 和 border */
+}
+
+#enter-button, #send-button {
+    padding: 10px 15px;
+    background-color: #5c8dff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#enter-button:hover, #send-button:hover {
+    background-color: #4a78d1;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 10px;
+    min-height: 1.2em; /* 避免佈局跳動 */
+}
+
+#chat-container {
+    display: flex;
+    width: 90%;
+    max-width: 1000px;
+    height: 80vh;
+    max-height: 700px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+    overflow: hidden; /* 確保內容不溢出 */
+    border: 1px solid #bbb;
+}
+
+#chat-area {
+    flex: 3; /* 佔用較大空間 */
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+#chat-area h2, #sidebar h2 {
+    padding: 15px;
+    margin: 0;
+    background-color: #e0e0e0;
+    border-bottom: 1px solid #ccc;
+    font-size: 1.1em;
+    color: #444;
+    text-align: center;
+}
+
+#chat-messages {
+    flex-grow: 1; /* 填滿剩餘空間 */
+    overflow-y: auto; /* 超出內容時顯示滾動條 */
+    padding: 15px;
+    background-color: #ffffff; /* 白色聊天背景 */
+}
+
+#chat-messages div {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    word-wrap: break-word; /* 長單詞或連結換行 */
+}
+
+/* 使圖片和視頻適應寬度 */
+#chat-messages img,
+#chat-messages video,
+#chat-messages iframe {
+    max-width: 90%; /* 不要完全佔滿，留點邊距 */
+    height: auto;
+    display: block; /* 避免下方多餘空間 */
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #eee; /* 可選：給媒體加個邊框 */
+}
+
+.message-chat strong {
+    color: #007bff; /* 暱稱顏色 */
+}
+.message-chat {
+    background-color: #e7f3ff; /* 聊天訊息背景 */
+    border: 1px solid #d0e0f0;
+}
+.message-system {
+    font-style: italic;
+    color: #666;
+    background-color: #f0f0f0; /* 系統訊息背景 */
+    text-align: center;
+    font-size: 0.9em;
+    border: 1px solid #e0e0e0;
+}
+
+#sidebar {
+    flex: 1; /* 佔用較小空間 */
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+}
+
+#user-list {
+    list-style: none;
+    padding: 15px;
+    margin: 0;
+    overflow-y: auto; /* 用戶多時可滾動 */
+    flex-grow: 1;
+}
+
+#user-list li {
+    padding: 5px 0;
+    color: #333;
+    border-bottom: 1px dashed #ddd; /* 懷舊分隔線 */
+}
+#user-list li:last-child {
+    border-bottom: none;
+}
+
+#message-input-area {
+    padding: 15px;
+    border-top: 1px solid #ccc;
+    background-color: #e0e0e0;
+}
+
+#message-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none; /* 禁止調整大小 */
+    box-sizing: border-box; /* 包含 padding 和 border */
+    margin-bottom: 10px;
+    font-family: inherit; /* 繼承 body 字體 */
+}
+
+#send-button {
+    width: 100%;
+}
+
+.status-message {
+    padding: 5px 15px;
+    font-size: 0.8em;
+    color: #888;
+    text-align: center;
+}</code></pre>
+            <hr>
+            <p><strong>4. 前端：</strong><span class="inline-code">public/client.js</span></p>
+            <pre><code>// client.js
+const loginContainer = document.getElementById('login-container');
+const chatContainer = document.getElementById('chat-container');
+const nicknameInput = document.getElementById('nickname-input');
+const enterButton = document.getElementById('enter-button');
+const loginError = document.getElementById('login-error');
+
+const chatMessages = document.getElementById('chat-messages');
+const userList = document.getElementById('user-list');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+const connectionStatus = document.getElementById('connection-status');
+
+let ws = null;
+let nickname = '';
+
+// --- 登入處理 ---
+enterButton.addEventListener('click', attemptLogin);
+nicknameInput.addEventListener('keypress', (event) =&gt; {
+    if (event.key === 'Enter') {
+        attemptLogin();
+    }
+});
+
+function attemptLogin() {
+    nickname = nicknameInput.value.trim();
+    loginError.textContent = ''; // 清除舊的錯誤訊息
+
+    if (nickname.length &lt; 2) {
+        loginError.textContent = '請填寫您的暱稱（至少2個字元）。';
+        // alert('請填寫您的暱稱（至少2個字元）。'); // 或者使用 alert
+        return;
+    }
+
+    // 顯示嘗試連接狀態
+    connectionStatus.textContent = '正在連接伺服器...';
+    connectWebSocket();
+}
+
+// --- WebSocket 連接與處理 ---
+function connectWebSocket() {
+    // --- 重要：請根據你的伺服器地址修改 ---
+    // 如果伺服器在本機運行，通常是 'ws://localhost:8080'
+    // 如果部署到伺服器，則需要換成 'ws://your-server-address:port' 或 'wss://your-secure-server-address'
+    const wsUrl = `ws://${window.location.hostname}:8080`; // 自動偵測主機名
+    // const wsUrl = 'ws://localhost:8080'; // 或者直接指定
+
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () =&gt; {
+        console.log('WebSocket 連接已建立');
+        connectionStatus.textContent = '連接成功！正在登入...';
+        // 發送登入訊息給伺服器
+        ws.send(JSON.stringify({ type: 'login', nickname: nickname }));
+    };
+
+    ws.onmessage = (event) =&gt; {
+        try {
+            const data = JSON.parse(event.data);
+            console.log('收到伺服器訊息:', data); // 調試用
+
+            switch (data.type) {
+                case 'login_error': // 處理登入錯誤 (例如暱稱重複)
+                    handleLoginError(data.message);
+                    break;
+                case 'system':
+                    appendMessage(data.message, 'system');
+                    // 檢查是否是自己的登入成功訊息
+                    if (data.message.includes(`您已成功進入聊天室，暱稱為 "${nickname}"`)) {
+                         showChatInterface(); // 只有在確認登入成功後才顯示聊天介面
+                    }
+                    break;
+                case 'chat':
+                    appendMessage(`&lt;strong&gt;${escapeHtml(data.nickname)}:&lt;/strong&gt; ${data.message}`, 'chat');
+                    break;
+                case 'userlist':
+                    updateUserList(data.users);
+                    break;
+                 case 'error': // 處理伺服器發來的其他錯誤
+                    console.error('伺服器錯誤:', data.message);
+                    appendMessage(`伺服器錯誤: ${escapeHtml(data.message)}`, 'system');
+                    break;
+                default:
+                    console.log('收到未知類型的訊息:', data.type);
+            }
+        } catch (error) {
+            console.error('處理伺服器訊息失敗:', error);
+            appendMessage('收到無法解析的訊息', 'system');
+        }
+    };
+
+    ws.onclose = (event) =&gt; {
+        console.log('WebSocket 連接已關閉:', event.reason || `Code: ${event.code}`);
+        connectionStatus.textContent = `連接已斷開 (${event.reason || `Code: ${event.code}`})。請重新整理頁面。`;
+        // 可以在這裡禁用輸入框和發送按鈕
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        // 如果不是因為登入錯誤而關閉，則顯示聊天介面已斷開
+        if (!loginError.textContent) { // 避免覆蓋登入錯誤
+            appendMessage('您已與伺服器斷開連接。', 'system');
+        }
+        // 可以選擇隱藏聊天介面，顯示登入介面
+        // hideChatInterface();
+    };
+
+    ws.onerror = (error) =&gt; {
+        console.error('WebSocket 錯誤:', error);
+        connectionStatus.textContent = '連接錯誤，請檢查伺服器是否運行或網路連線。';
+        // 如果尚未登入成功，顯示在登入錯誤區
+        if (loginContainer.style.display !== 'none') {
+             loginError.textContent = '無法連接到聊天伺服器。';
+        } else {
+             appendMessage('與伺服器的連接發生錯誤。', 'system');
+        }
+        // 關閉可能存在的 ws 連接
+        if (ws &amp;&amp; ws.readyState !== WebSocket.CLOSED) {
+            ws.close();
+        }
+    };
+}
+
+function handleLoginError(message) {
+    loginError.textContent = message;
+    connectionStatus.textContent = '登入失敗。';
+    // 確保 ws 連接已關閉
+    if (ws &amp;&amp; ws.readyState === WebSocket.OPEN) {
+        ws.close();
+    }
+    ws = null; // 清除 ws 實例
+}
+
+
+function showChatInterface() {
+    loginContainer.style.display = 'none';
+    chatContainer.style.display = 'flex'; // 使用 flex 佈局
+    messageInput.disabled = false;
+    sendButton.disabled = false;
+    messageInput.focus(); // 自動聚焦到輸入框
+    connectionStatus.textContent = '已連接'; // 更新狀態
+}
+
+function hideChatInterface() {
+    chatContainer.style.display = 'none';
+    loginContainer.style.display = 'block'; // 或 'flex' 取決於你的佈局
+    nicknameInput.value = ''; // 清空暱稱輸入
+    nickname = '';
+    ws = null; // 清除ws實例
+     connectionStatus.textContent = ''; // 清空狀態
+}
+
+
+// --- 訊息處理 ---
+sendButton.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (event) =&gt; {
+    // 按下 Enter 發送，Shift+Enter 換行
+    if (event.key === 'Enter' &amp;&amp; !event.shiftKey) {
+        event.preventDefault(); // 阻止默認的換行行為
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    const messageText = messageInput.value.trim();
+    if (messageText &amp;&amp; ws &amp;&amp; ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'message', text: messageText }));
+        messageInput.value = ''; // 清空輸入框
+    } else if (!ws || ws.readyState !== WebSocket.OPEN) {
+        appendMessage('錯誤：未連接到伺服器，無法發送訊息。', 'system');
+    }
+    messageInput.focus(); // 保持焦點在輸入框
+}
+
+// 將訊息附加到聊天視窗
+function appendMessage(content, type) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add(`message-${type}`); // 添加樣式 class (message-chat 或 message-system)
+
+    // 使用 innerHTML 來渲染 HTML 內容
+    // **安全警告**: 這允許用戶輸入的 HTML 被執行，可能存在 XSS 風險。
+    // 在生產環境中，應在服務器端或客戶端進行嚴格的 HTML 清理 (Sanitization)。
+    // 對於這個懷舊聊天室的特定要求，我們暫時接受這個風險。
+    messageElement.innerHTML = content;
+
+    chatMessages.appendChild(messageElement);
+    // 自動滾動到底部
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 更新在線用戶列表
+function updateUserList(users) {
+    userList.innerHTML = ''; // 清空現有列表
+    users.forEach(user =&gt; {
+        const li = document.createElement('li');
+        li.textContent = escapeHtml(user); // 顯示用戶名，進行 HTML 轉義以防用戶名包含 HTML
+        userList.appendChild(li);
+    });
+}
+
+// 簡單的 HTML 轉義函數，防止用戶名注入 HTML
+function escapeHtml(unsafe) {
+    if (!unsafe) return ''; // 處理 null 或 undefined
+    return unsafe
+         .replace(/&amp;/g, "&amp;amp;")
+         .replace(/</g, "&amp;lt;")
+         .replace(/>/g, "&amp;gt;")
+         .replace(/"/g, "&amp;quot;")
+         .replace(/'/g, "&amp;#039;");
+}</code></pre>
+            <hr>
+            <p><strong>如何運行：</strong></p>
+            <ol>
+                <li><strong>安裝 Node.js:</strong> 如果你還沒有安裝 Node.js，請從 <a href="https://nodejs.org/" target="_blank">Node.js 官網</a> 下載並安裝。</li>
+                <li><strong>創建項目文件夾:</strong> 創建一個名為 <span class="inline-code">nostalgic-chat</span> 的文件夾。</li>
+                <li><strong>創建 <span class="inline-code">public</span> 文件夾:</strong> 在 <span class="inline-code">nostalgic-chat</span> 文件夾內創建 <span class="inline-code">public</span> 文件夾。</li>
+                <li><strong>放入文件:</strong> 將上面提供的 <span class="inline-code">server.js</span> 放在 <span class="inline-code">nostalgic-chat</span> 文件夾中。將 <span class="inline-code">index.html</span>, <span class="inline-code">style.css</span>, <span class="inline-code">client.js</span> 放在 <span class="inline-code">public</span> 文件夾中。</li>
+                <li>
+                    <p><strong>安裝依賴:</strong> 打開終端（或命令提示字元），進入 <span class="inline-code">nostalgic-chat</span> 文件夾，然後運行：</p>
+                    <pre><code>npm init -y
+npm install ws</code></pre>
+                    <p>這會生成 <span class="inline-code">package.json</span> 文件並安裝 <span class="inline-code">ws</span> 函式庫。</p>
+                </li>
+                <li>
+                    <p><strong>啟動伺服器:</strong> 在終端中運行：</p>
+                    <pre><code>node server.js</code></pre>
+                    <p>你會看到 <span class="inline-code">懷舊聊天室伺服器已啟動於 ws://localhost:8080</span> 的提示。</p>
+                </li>
+                <li>
+                    <p><strong>訪問聊天室:</strong> 打開你的網頁瀏覽器，訪問 <span class="inline-code">http://localhost:8080</span>？ <strong>等等，我們沒有設置 HTTP 伺服器！</strong></p>
+                    <p><strong>修正：</strong> 上述後端只啟動了 WebSocket 伺服器，沒有提供 HTML 文件的 HTTP 服務。最簡單的方法是：</p>
+                    <ul>
+                        <li>
+                            <p><strong>方法一 (推薦用於簡單測試):</strong> 直接在瀏覽器中打開 <span class="inline-code">public/index.html</span> 文件 (<span class="inline-code">file:///.../nostalgic-chat/public/index.html</span>)。這在大多數現代瀏覽器中可以工作，因為 WebSocket 連接是獨立的。<strong>確保 <span class="inline-code">client.js</span> 中的 <span class="inline-code">wsUrl</span> 指向正確的 <span class="inline-code">ws://localhost:8080</span></strong>。</p>
+                        </li>
+                        <li>
+                            <p><strong>方法二 (更標準):</strong> 使用一個簡單的 HTTP 伺服器來提供 <span class="inline-code">public</span> 文件夾的內容。可以用 Node.js 的 <span class="inline-code">http-server</span> 包：</p>
+                            <pre><code># 全局安裝 (只需一次) 或使用 npx
+npm install -g http-server
+# 或者使用 npx (無需全局安裝)
+# npx http-server ./public
+
+# 在 nostalgic-chat 文件夾下運行
+http-server ./public -p 8888 # 使用 8888 端口提供 public 文件夾內容</code></pre>
+                            <p>然後在瀏覽器中訪問 <span class="inline-code">http://localhost:8888</span>。WebSocket 仍然連接到 <span class="inline-code">ws://localhost:8080</span>（由 <span class="inline-code">server.js</span> 運行）。<strong>確保 <span class="inline-code">client.js</span> 中的 <span class="inline-code">wsUrl</span> 指向 <span class="inline-code">ws://localhost:8080</span></strong>。</p>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <p><strong>使用聊天室:</strong></p>
+                    <ul>
+                        <li>輸入至少2個字的暱稱，點擊“進入聊天室”。</li>
+                        <li>成功後，你會看到聊天介面。</li>
+                        <li>左側是聊天內容，右側是在線用戶列表。</li>
+                        <li>在下方輸入框輸入訊息，可以包含 HTML（例如 <span class="inline-code">&lt;b&gt;粗體&lt;/b&gt;</span>, <span class="inline-code">&lt;img src="圖片URL"&gt;</span>, <span class="inline-code">&lt;a href="連結"&gt;連結文字&lt;/a&gt;</span>, 甚至 iframe 包裹的視頻）。</li>
+                        <li>按 Enter 或點擊“發送”按鈕發送訊息。</li>
+                        <li>關閉瀏覽器標籤頁或窗口即為“登出”，你的暱稱會從列表中移除，聊天記錄對後來的用戶不可見。重新進入只能看到最新的訊息。</li>
+                    </ul>
+                </li>
+            </ol>
+            <hr>
+            <p><strong>重要提示和改進點：</strong></p>
+            <ul>
+                <li><strong>安全性 (XSS):</strong> 前端直接使用 <span class="inline-code">innerHTML</span> 渲染用戶輸入的內容存在 <strong>跨站腳本攻擊 (XSS)</strong> 風險。惡意用戶可以輸入 <span class="inline-code">&lt;script&gt;</span> 標籤執行任意 JavaScript。在生產環境中，<strong>必須</strong> 使用 HTML 清理庫（如客戶端的 <a href="https://github.com/cure53/DOMPurify" target="_blank">DOMPurify</a> 或服務器端的類似庫）來過濾掉危險的標籤和屬性，只允許安全的 HTML 子集。對於這個懷舊聊天室的特定要求，我們暫時接受這個風險。</li>
+                <li><strong>錯誤處理:</strong> 增加了基本的錯誤處理，但可以更完善，例如更詳細的錯誤回饋給用戶。</li>
+                <li><strong>伺服器擴展性:</strong> 這個實現非常基礎，所有客戶端都在一個 Node.js 進程中處理。對於大量用戶，需要考慮集群、負載均衡等方案。</li>
+                <li><strong>暱稱唯一性:</strong> 當前的暱稱唯一性檢查比較基礎，在高併發下可能有競爭條件。可以使用更可靠的方式（如 Redis set）來管理。</li>
+                <li><strong>部署:</strong> 部署到線上伺服器時，需要考慮使用 <span class="inline-code">wss://</span> (Secure WebSocket) 配合 HTTPS，並配置反向代理（如 Nginx）。</li>
+                <li><strong>懷舊風格:</strong> CSS 樣式只是基礎，你可以根據自己的喜好添加更多懷舊元素（像素字體、特定配色方案、邊框樣式等）。</li>
+                <li><strong>心跳檢測:</strong> 註釋掉的心跳檢測 (Ping/Pong) 可以幫助伺服器清理掉已經失去連接但未觸發 <span class="inline-code">close</span> 事件的客戶端（例如網絡突然中斷）。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Turn 3: User -->
+    <div class="turn user-turn">
+        <div class="speaker">User:</div>
+        <div class="content">
+            <p>我想架設到 glitch.com，需要修改什麼嗎？</p>
+        </div>
+    </div>
+
+    <!-- Turn 4: Model (Response for Glitch) -->
+    <div class="turn model-turn">
+        <div class="speaker">Gemini:</div>
+        <div class="content">
+            <p>將這個聊天室應用架設到 Glitch.com 需要進行一些調整，主要是因為 Glitch 的運行環境和端口分配方式與本地開發不同。</p>
+            <p>以下是需要修改的步驟和文件：</p>
+            <p><strong>核心改動：</strong></p>
+            <ol>
+                <li><strong>合併 HTTP 和 WebSocket 伺服器：</strong> Glitch 通常只分配一個 <span class="inline-code">PORT</span> 給你的應用，你需要用同一個 Node.js 進程同時處理 HTTP 請求（提供 HTML/CSS/JS 文件）和 WebSocket 連接。我們將使用 <span class="inline-code">express</span> 框架來簡化這個過程。</li>
+                <li><strong>監聽 Glitch 分配的端口：</strong> 應用必須監聽 Glitch 通過 <span class="inline-code">process.env.PORT</span> 環境變數指定的端口。</li>
+                <li><strong>修改客戶端 WebSocket 連接地址：</strong> <span class="inline-code">client.js</span> 需要動態地連接到 Glitch 分配給你的應用的 WSS (Secure WebSocket) 地址。</li>
+                <li><strong>更新 <span class="inline-code">package.json</span>：</strong> 添加 <span class="inline-code">express</span> 依賴，並確保有 <span class="inline-code">start</span> 腳本。</li>
+            </ol>
+            <hr>
+            <p><strong>修改步驟：</strong></p>
+            <p><strong>1. 安裝 <span class="inline-code">express</span> 依賴：</strong></p>
+            <p>在你的本地項目文件夾 (<span class="inline-code">nostalgic-chat</span>) 的終端中運行：</p>
+            <pre><code>npm install express</code></pre>
+            <p>這會將 <span class="inline-code">express</span> 添加到你的 <span class="inline-code">package.json</span> 文件中。</p>
+            <p><strong>2. 修改 <span class="inline-code">server.js</span>：</strong></p>
+            <p>用以下內容替換你現有的 <span class="inline-code">server.js</span> 文件。主要改動包括：</p>
+            <ul>
+                <li>引入 <span class="inline-code">express</span> 和 Node.js 內建的 <span class="inline-code">http</span> 模塊。</li>
+                <li>使用 Express 來提供 <span class="inline-code">public</span> 文件夾下的靜態文件。</li>
+                <li>創建一個 HTTP 伺服器，並將 WebSocket 伺服器附加到這個 HTTP 伺服器上。</li>
+                <li>監聽 <span class="inline-code">process.env.PORT</span>。</li>
+            </ul>
+            <pre><code>// server.js
+const WebSocket = require('ws');
+const express = require('express');
+const http = require('http');
+const path = path = require('path'); // 需要 path 模塊來處理文件路徑
+
+// ---- Express 和 HTTP 伺服器設置 ----
+const app = express();
+const server = http.createServer(app); // 使用 Express App 創建 HTTP 伺服器
+
+// 配置 Express 提供 public 文件夾中的靜態文件
+app.use(express.static(path.join(__dirname, 'public')));
+
+// (可選) 根路徑請求也導向 index.html
+app.get('/', (req, res) =&gt; {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ---- WebSocket 伺服器設置 ----
+// 將 WebSocket 伺服器附加到現有的 HTTP 伺服器上
+// 注意：這裡不再指定 port，因為它將使用 HTTP 伺服器的端口
+const wss = new WebSocket.Server({ server });
+
+const clients = new Map(); // 使用 Map 來儲存 ws 連線和對應的暱稱
+
+// ---- WebSocket 事件處理邏輯 (與之前基本相同) ----
+wss.on('connection', (ws) =&gt; {
+    console.log('一個客戶端嘗試連接...');
+    // (添加 isAlive 屬性用於心跳檢測 - 可選但建議在 Glitch 上使用)
+    ws.isAlive = true;
+    ws.on('pong', () =&gt; {
+        ws.isAlive = true; // 收到 pong，標記為存活
+    });
+
+
+    ws.on('message', (message) =&gt; {
+        // (添加了對二進制數據的檢查，雖然我們主要用 JSON)
+        if (message instanceof Buffer) {
+           // 嘗試將 Buffer 轉為字串
+           message = message.toString();
+        }
+
+        // 如果 message 不是字串或為空，則忽略
+        if (typeof message !== 'string' || message.trim() === '') {
+            console.log('收到空訊息或非文本訊息，忽略。');
+            return;
+        }
+
+
+        try {
+            const data = JSON.parse(message);
+            console.log('收到訊息:', data);
+
+            switch (data.type) {
+                case 'login':
+                    handleLogin(ws, data.nickname);
+                    break;
+                case 'message':
+                    handleMessage(ws, data.text);
+                    break;
+                default:
+                    console.log('收到未知類型的訊息:', data.type);
+            }
+        } catch (error) {
+            console.error('處理訊息失敗:', error, '原始訊息:', message);
+            // ws.send(JSON.stringify({ type: 'error', message: '無效的訊息格式' }));
+        }
+    });
+
+    ws.on('close', () =&gt; {
+        handleLogout(ws);
+    });
+
+    ws.on('error', (error) =&gt; {
+        console.error('WebSocket 錯誤:', error);
+        handleLogout(ws); // 出錯時也嘗試處理登出
+    });
+});
+
+function handleLogin(ws, nickname) {
+    if (!nickname || typeof nickname !== 'string' || nickname.trim().length &lt; 2) {
+        ws.send(JSON.stringify({ type: 'login_error', message: '無效的暱稱。' }));
+        ws.close();
+        console.log(`無效暱稱，拒絕連接。`);
+        return;
+    }
+    nickname = nickname.trim(); // 去除前後空格
+
+    for (const existingNickname of clients.values()) {
+        if (existingNickname === nickname) {
+            ws.send(JSON.stringify({ type: 'login_error', message: `暱稱 "${nickname}" 已被使用，請換一個！` }));
+            ws.close();
+            console.log(`暱稱 ${nickname} 重複，拒絕連接。`);
+            return;
+        }
+    }
+
+    clients.set(ws, nickname);
+    console.log(`用戶 "${nickname}" 加入了聊天室`);
+
+    broadcast({
+        type: 'system',
+        message: `歡迎 "${nickname}" 加入聊天室！`
+    });
+    broadcastUserList();
+     ws.send(JSON.stringify({
+        type: 'system',
+        message: `您已成功進入聊天室，暱稱為 "${nickname}"`
+    }));
+}
+
+function handleMessage(ws, text) {
+    const nickname = clients.get(ws);
+    if (!nickname) {
+        console.log('收到來自未登入用戶的訊息，忽略。');
+        return;
+    }
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+        return; // 忽略空訊息或非字串訊息
+    }
+
+    console.log(`"${nickname}" 說: ${text}`);
+    broadcast({
+        type: 'chat',
+        nickname: nickname,
+        message: text
+    });
+}
+
+function handleLogout(ws) {
+    const nickname = clients.get(ws);
+    if (nickname) {
+        console.log(`用戶 "${nickname}" 離開了聊天室`);
+        clients.delete(ws);
+        broadcast({
+            type: 'system',
+            message: `"${nickname}" 離開了聊天室。`
+        });
+        broadcastUserList();
+    } else {
+        console.log('一個未登入的客戶端斷開連接。');
+    }
+}
+
+function broadcast(data) {
+    const messageString = JSON.stringify(data);
+    wss.clients.forEach((client) =&gt; {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(messageString, (err) =&gt; { // 添加錯誤回調
+                if (err) {
+                    console.error(`發送訊息給客戶端失敗: ${err}`);
+                    // 可以在這裡處理錯誤，例如嘗試移除此客戶端
+                    handleLogout(client);
+                    client.terminate(); // 強制關閉有問題的連接
+                }
+            });
+        }
+    });
+}
+
+function broadcastUserList() {
+    const userList = Array.from(clients.values());
+    broadcast({
+        type: 'userlist',
+        users: userList
+    });
+}
+
+// ---- 心跳檢測 (可選但建議) ----
+// Glitch 可能會在不活動時休眠連接，心跳有助於保持活躍或檢測死連接
+const interval = setInterval(() =&gt; {
+  wss.clients.forEach((ws) =&gt; {
+    if (ws.isAlive === false) {
+        console.log(`客戶端 ${clients.get(ws) || '未知'} 未響應 Ping，終止連接。`);
+        handleLogout(ws); // 先處理登出邏輯
+        return ws.terminate(); // 終止連接
+    }
+    ws.isAlive = false; // 假設客戶端已斷開
+    ws.ping(() =&gt; {}); // 發送 Ping，等待 Pong 回應來設置 isAlive = true
+  });
+}, 30000); // 每 30 秒檢查一次
+
+wss.on('close', () =&gt; {
+  clearInterval(interval); // 伺服器關閉時清除定時器
+});
+
+
+// ---- 啟動伺服器 ----
+// Glitch 會設置 PORT 環境變量，我們需要監聽它
+// 提供一個本地開發的備用端口 (例如 3000)
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () =&gt; {
+    console.log(`懷舊聊天室伺服器已啟動，正在監聽端口 ${PORT}`);
+    console.log(`HTTP服務運行於 http://localhost:${PORT}`);
+    console.log(`WebSocket服務附加於同一端口`);
+});</code></pre>
+            <p><strong>3. 修改 <span class="inline-code">public/client.js</span>：</strong></p>
+            <p>找到 <span class="inline-code">connectWebSocket</span> 函數，修改 <span class="inline-code">wsUrl</span> 的創建方式，使其動態生成。Glitch 使用 HTTPS，所以我們需要連接 <span class="inline-code">wss://</span>。</p>
+            <pre><code>// client.js
+
+// ... (其他代碼保持不變) ...
+
+function connectWebSocket() {
+    // --- 動態生成 WebSocket URL ---
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'; // 判斷是 http 還是 https
+    const wsHost = window.location.host; // 使用當前頁面的主機名 (例如 your-project-name.glitch.me)
+    const wsUrl = `${wsProtocol}//${wsHost}`; // Glitch 會將 WSS 請求路由到你的應用端口
+
+    console.log(`嘗試連接到: ${wsUrl}`); // 調試輸出
+
+    // --- 重要：移除或註釋掉舊的本地 URL ---
+    // const wsUrl = `ws://${window.location.hostname}:8080`; // 舊的本地代碼
+    // const wsUrl = 'ws://localhost:8080'; // 舊的本地代碼
+
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () =&gt; {
+        console.log('WebSocket 連接已建立');
+        connectionStatus.textContent = '連接成功！正在登入...';
+        // 發送登入訊息給伺服器
+        if (nickname) { // 確保 nickname 存在
+             ws.send(JSON.stringify({ type: 'login', nickname: nickname }));
+        } else {
+             console.error("嘗試發送登入訊息時暱稱為空");
+             handleLoginError("內部錯誤：無法獲取暱稱");
+             ws.close();
+        }
+    };
+
+    // ... (ws.onmessage, ws.onclose, ws.onerror 保持不變) ...
+    ws.onclose = (event) =&gt; {
+        console.log('WebSocket 連接已關閉:', event.reason || `Code: ${event.code}`);
+        const reason = event.reason || `Code: ${event.code}`;
+        connectionStatus.textContent = `連接已斷開 (${reason})。如需重連請刷新頁面。`;
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        if (!loginError.textContent &amp;&amp; chatContainer.style.display !== 'none') {
+            appendMessage('您已與伺服器斷開連接。', 'system');
+        }
+        // 不自動隱藏聊天介面，讓用戶知道連接斷了
+        // hideChatInterface();
+        ws = null; // 清除引用
+    };
+
+     ws.onerror = (error) =&gt; {
+        console.error('WebSocket 錯誤:', error);
+        const errorMsg = '無法連接到聊天伺服器或連接中斷。請檢查網路或刷新頁面。';
+        connectionStatus.textContent = '連接錯誤。';
+        if (loginContainer.style.display !== 'none') {
+             loginError.textContent = errorMsg;
+        } else {
+             appendMessage('與伺服器的連接發生錯誤。', 'system');
+        }
+        // 確保關閉
+        if (ws &amp;&amp; ws.readyState !== WebSocket.CLOSED &amp;&amp; ws.readyState !== WebSocket.CLOSING) {
+            ws.close();
+        }
+        ws = null; // 清除引用
+    };
+}
+
+// ... (其他代碼保持不變) ...</code></pre>
+            <p><strong>4. 檢查/修改 <span class="inline-code">package.json</span>：</strong></p>
+            <p>確保你的 <span class="inline-code">package.json</span> 文件包含以下內容（版本號可能不同）：</p>
+            <pre><code>{
+  "name": "nostalgic-chat",
+  "version": "1.0.0",
+  "description": "一個懷舊風格的 WebSocket 聊天室",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js", // Glitch 會運行這個命令來啟動你的應用
+    "test": "echo \"Error: no test specified\" &amp;&amp; exit 1"
+  },
+  "dependencies": {
+    "express": "^4.17.1", // 或更高版本
+    "ws": "^8.0.0"       // 或更高版本
+  },
+  "engines": { // 告知 Glitch 使用哪個 Node.js 版本 (可選但推薦)
+    "node": "18.x" // 或者你希望使用的其他 LTS 版本
+  },
+  "keywords": ["chat", "websocket", "nostalgic", "glitch"],
+  "author": "Your Name",
+  "license": "MIT"
+}</code></pre>
+            <ul>
+                <li><strong><span class="inline-code">"main": "server.js"</span></strong>: 指定入口文件。</li>
+                <li><strong><span class="inline-code">"scripts": { "start": "node server.js" }</span></strong>: Glitch 需要這個 <span class="inline-code">start</span> 腳本來啟動你的服務。</li>
+                <li><strong><span class="inline-code">"dependencies"</span></strong>: 確保 <span class="inline-code">express</span> 和 <span class="inline-code">ws</span> 都在這裡。</li>
+                <li><strong><span class="inline-code">"engines"</span></strong>: (可選) 指定 Node.js 版本可以避免一些潛在的兼容性問題。</li>
+            </ul>
+            <hr>
+            <p><strong>部署到 Glitch：</strong></p>
+            <ol>
+                <li><strong>註冊/登錄 Glitch:</strong> 訪問 <a href="https://glitch.com/" target="_blank">glitch.com</a>。</li>
+                <li><strong>創建新項目:</strong> 點擊 "New Project"，然後選擇 "hello-express" (它提供了一個基本的 Node.js + Express 環境) 或者 "Import from GitHub" (如果你把代碼放到了 GitHub)。如果你選擇 "hello-express"，你需要刪除它自帶的樣板文件，然後上傳你的文件。</li>
+                <li>
+                    <p><strong>上傳文件:</strong></p>
+                    <ul>
+                        <li>將修改後的 <span class="inline-code">server.js</span> 和 <span class="inline-code">package.json</span> 上傳到 Glitch 項目的根目錄。</li>
+                        <li>創建 <span class="inline-code">public</span> 文件夾。</li>
+                        <li>將 <span class="inline-code">index.html</span>, <span class="inline-code">style.css</span>, 和修改後的 <span class="inline-code">client.js</span> 上傳到 <span class="inline-code">public</span> 文件夾中。</li>
+                    </ul>
+                </li>
+                <li><strong>自動安裝和啟動:</strong> Glitch 會自動檢測 <span class="inline-code">package.json</span> 的變化並運行 <span class="inline-code">npm install</span> 來安裝 <span class="inline-code">express</span> 和 <span class="inline-code">ws</span>。安裝完成後，它會自動運行 <span class="inline-code">npm start</span> (即 <span class="inline-code">node server.js</span>)。</li>
+                <li><strong>訪問你的應用:</strong> Glitch 會為你的項目分配一個公開的 URL，格式通常是 <span class="inline-code">your-project-name.glitch.me</span>。點擊 Glitch 界面上的 "Show" 或 "Preview" 按鈕，在新的標籤頁中打開你的聊天室應用。</li>
+                <li><strong>查看日誌:</strong> 你可以在 Glitch 界面的 "Logs" 部分看到 <span class="inline-code">console.log</span> 的輸出，這對於調試很有幫助。</li>
+            </ol>
+            <p>現在，你的懷舊聊天室應該可以在 Glitch 上運行了！任何人都可以通過你的 Glitch URL 訪問它。</p>
+        </div>
+    </div>
+
+    <!-- Turn 5: User -->
+    <div class="turn user-turn">
+        <div class="speaker">User:</div>
+        <div class="content">
+            <p>Glitch 上的 log</p>
+            <p>Jump To/app/server.js:5<br>12:35 PM<br>const path = path = require('path'); // 需要 path 模塊來處理文件路徑<br>12:35 PM<br>^<br>12:35 PM<br>12:35 PM<br>ReferenceError: path is not defined<br>12:35 PM<br>Jump Toat Object.<anonymous> (/app/server.js:5:19)<br>12:35 PM<br>at Module._compile (internal/modules/cjs/loader.js:778:30)<br>12:35 PM<br>at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)<br>12:35 PM<br>at Module.load (internal/modules/cjs/loader.js:653:32)<br>12:35 PM<br>at tryModuleLoad (internal/modules/cjs/loader.js:593:12)<br>12:35 PM<br>at Function.Module._load (internal/modules/cjs/loader.js:585:3)<br>12:35 PM<br>at Function.Module.runMain (internal/modules/cjs/loader.js:831:12)<br>12:35 PM<br>at startup (internal/bootstrap/node.js:283:19)<br>12:35 PM<br>at bootstrapNodeJSCore (internal/bootstrap/node.js:623:3)</p>
+        </div>
+    </div>
+
+     <!-- Turn 6: Model (Response fixing the error) -->
+    <div class="turn model-turn">
+        <div class="speaker">Gemini:</div>
+        <div class="content">
+             <p>啊，這個錯誤很明顯，是我之前提供代碼時的一個小筆誤！😅</p>
+            <p><strong>問題原因：</strong></p>
+            <p>在 <span class="inline-code">server.js</span> 文件的第 5 行，代碼是：</p>
+            <pre><code>const path = path = require('path'); // 錯誤的寫法</code></pre>
+            <p>這裡的 <span class="inline-code">path = require('path')</span> 嘗試在 <span class="inline-code">const path</span> 聲明完成之前就去讀取 <span class="inline-code">path</span> 變量，導致了 <span class="inline-code">ReferenceError: path is not defined</span>。</p>
+            <p><strong>解決方案：</strong></p>
+            <p>你需要修改 <span class="inline-code">server.js</span> 的第 5 行，將其更正為：</p>
+            <pre><code>const path = require('path'); // 正確的寫法</code></pre>
+            <p><strong>操作步驟：</strong></p>
+            <ol>
+                <li>在 Glitch 的編輯器中，打開 <span class="inline-code">server.js</span> 文件。</li>
+                <li>找到第 5 行（或者包含 <span class="inline-code">const path = path = require('path');</span> 的那一行）。</li>
+                <li>將其修改為 <span class="inline-code">const path = require('path');</span>。</li>
+                <li>Glitch 會自動保存你的修改，並重新啟動你的應用程序。</li>
+                <li>觀察 Glitch 界面下方的 "Logs" 區域，確認錯誤信息消失，並且看到類似 <span class="inline-code">懷舊聊天室伺服器已啟動，正在監聽端口 XXXX</span> 的成功啟動消息。</li>
+            </ol>
+            <p>修改後，你的應用應該就能正常啟動了。</p>
+        </div>
+    </div>
+
+    <!-- Turn 7: User -->
+    <div class="turn user-turn">
+        <div class="speaker">User:</div>
+        <div class="content">
+             <p>我現在已經把聊天室架到<a href="https://nostalgic-chat.glitch.me" target="_blank">https://nostalgic-chat.glitch.me，請幫我生成一個github的md和敘述，用於展示此專案</a></p>
+        </div>
+    </div>
+
+    <!-- Turn 8: Model (Response with README) -->
+    <div class="turn model-turn">
+        <div class="speaker">Gemini:</div>
+        <div class="content">
+             <p>好的，這是一個適用於你 GitHub 專案的 <span class="inline-code">README.md</span> 文件內容和一個簡短的 GitHub 倉庫描述。</p>
+            <hr>
+            <p><strong>GitHub 倉庫描述 (Description):</strong></p>
+            <pre><code>一個基於 Node.js 和 WebSocket 的懷舊風格網頁聊天室，無需註冊，支援 HTML 內容分享。部署於 Glitch。 (A nostalgic-style web chatroom based on Node.js &amp; WebSocket. No registration required, supports HTML sharing. Deployed on Glitch.)</code></pre>
+            <hr>
+            <p><strong><span class="inline-code">README.md</span> 文件內容:</strong></p>
+            <pre><code># 懷舊聊天室 (Nostalgic Chat) ✨
+
+[![線上體驗](https://img.shields.io/badge/線上體驗-Glitch-brightgreen)](https://nostalgic-chat.glitch.me)
+
+一個基於 Node.js 和 WebSocket 的簡易網頁聊天室，無需註冊即可加入，旨在重現早期網路聊天室的簡單、即時互動體驗。
+
+A simple web chatroom built with Node.js and WebSocket, allowing users to join without registration, aiming to recreate the experience of early internet chatrooms.
+
+**➡️ [點此線上體驗 (Live Demo on Glitch)](https://nostalgic-chat.glitch.me) ⬅️**
+
+## 截圖預覽 (Screenshot)
+
+*(建議在此處插入一張聊天室界面的截圖)*
+
+![聊天室截圖](URL_TO_YOUR_SCREENSHOT.png)
+*請將 `URL_TO_YOUR_SCREENSHOT.png` 替換為你的截圖圖片連結。你可以將圖片上傳到 GitHub 倉庫或使用圖片託管服務。*
+
+## 主要功能 (Features)
+
+*   👤 **免註冊登入:** 輸入至少兩個字元的暱稱即可加入。
+*   💬 **即時聊天:** 使用 WebSocket 實現低延遲的訊息廣播。
+*   📜 **聊天內容渲染:**
+    *   支援基本的 HTML 標籤渲染 (e.g., `&lt;b&gt;`, `&lt;i&gt;`)。
+    *   支援貼上圖片 URL (`&lt;img src="..."&gt;`) 直接顯示圖片。
+    *   支援貼上連結 (`&lt;a href="..."&gt;`)。
+    *   支援嵌入視頻 (e.g., 使用 `&lt;iframe&gt;`)。
+*   👥 **在線用戶列表:** 右側即時顯示當前在線的所有用戶暱稱。
+*   💨 **聊天記錄不保存:** 關閉瀏覽器或重新整理後，之前的聊天記錄即清除，符合「懷舊」和「臨時」的特性。每次進入只能看到最新的內容。
+*   📱 **基本響應式:** 介面在不同屏幕寬度下有基本適應性。
+
+## 技術棧 (Technology Stack)
+
+*   **前端 (Frontend):**
+    *   HTML5
+    *   CSS3
+    *   原生 JavaScript (Vanilla JavaScript)
+*   **後端 (Backend):**
+    *   Node.js
+    *   `ws` (WebSocket 函式庫)
+    *   `express` (用於提供靜態文件和處理 HTTP 請求，尤其是在 Glitch 環境下)
+*   **部署 (Deployment):**
+    *   Glitch.com
+
+## 如何在本地運行 (Running Locally)
+
+1.  **克隆倉庫 (Clone the repository):**
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/nostalgic-chat.git
+    cd nostalgic-chat
+    ```
+    *(請將 `YOUR_USERNAME` 替換為你的 GitHub 用戶名)*
+
+2.  **安裝依賴 (Install dependencies):**
+    ```bash
+    npm install
+    ```
+
+3.  **啟動伺服器 (Start the server):**
+    ```bash
+    npm start
+    # 或者 node server.js
+    ```
+    伺服器將默認在本地的 3000 端口啟動 (或 `server.js` 中指定的備用端口)。
+
+4.  **訪問聊天室 (Access the chatroom):**
+    在瀏覽器中打開 `http://localhost:3000`。
+
+## 部署 (Deployment)
+
+此專案目前部署於 [Glitch](https://glitch.com/)。Glitch 提供了一個方便的 Node.js 應用託管環境。主要配置請參考 `server.js` 中對 `process.env.PORT` 的監聽以及 `client.js` 中動態生成 WebSocket URL 的部分。
+
+## ⚠️ 重要提示與限制 (Important Notes &amp; Limitations)
+
+*   **安全性 (XSS Risk):** 為了實現 HTML 內容渲染，前端直接使用了 `innerHTML`。這意味著用戶可以輸入惡意的 HTML 或 JavaScript 代碼 (`&lt;script&gt;`)，存在 **跨站腳本攻擊 (XSS)** 的風險。**此項目僅為演示目的，請勿在需要高安全性的生產環境中直接使用此渲染方式。** 若需提高安全性，應在客戶端或服務器端引入 HTML 清理庫 (如 DOMPurify)。
+*   **無歷史記錄:** 聊天內容不會被儲存，這是設計特性。
+*   **擴展性:** 目前的實現非常基礎，適用於少量用戶。對於大規模應用，需要更複雜的架構。
+*   **暱稱衝突:** 簡單的暱稱重複檢查，高併發下可能存在問題。
+
+## 授權 (License)
+
+[MIT](LICENSE)
+*(如果你的倉庫中沒有 LICENSE 文件，可以移除此連結或選擇一個合適的開源許可證)*</code></pre>
+            <p><strong>使用說明:</strong></p>
+            <ol>
+                <li>
+                    <p><strong>替換截圖連結:</strong> 在 <span class="inline-code">README.md</span> 中找到 <span class="inline-code">![聊天室截圖](URL_TO_YOUR_SCREENSHOT.png)</span> 這一行，將 <span class="inline-code">URL_TO_YOUR_SCREENSHOT.png</span> 替換成你實際的截圖圖片的 URL。你可以：</p>
+                    <ul>
+                        <li>截取一張你的聊天室運行時的圖片 (例如 <span class="inline-code">screenshot.png</span>)。</li>
+                        <li>將這個圖片文件上傳到你的 GitHub 倉庫根目錄下。</li>
+                        <li>然後將 URL 改為 <span class="inline-code">screenshot.png</span> (相對路徑) 或者 GitHub 提供的圖片原始文件連結。</li>
+                    </ul>
+                </li>
+                <li><strong>替換克隆連結:</strong> 將 <span class="inline-code">git clone</span> 命令中的 <span class="inline-code">YOUR_USERNAME</span> 替換成你自己的 GitHub 用戶名。</li>
+                <li><strong>授權 (License):</strong> 如果你希望使用 MIT 授權，可以在倉庫根目錄創建一個名為 <span class="inline-code">LICENSE</span> 的文件，並將 <a href="https://opensource.org/licenses/MIT" target="_blank">MIT 許可證文本</a> 複製進去。如果選擇其他授權或不指定，請相應修改 <span class="inline-code">README.md</span> 的最後一行。</li>
+                <li>
+                    <p><strong>複製到 GitHub:</strong></p>
+                    <ul>
+                        <li>將上面提供的 <strong>GitHub 倉庫描述</strong> 貼到你 GitHub 倉庫頁面的 "About" 部分的描述欄裡。</li>
+                        <li>將上面提供的 <strong><span class="inline-code">README.md</span> 文件內容</strong> 完整複製，貼到你 GitHub 倉庫根目錄下的 <span class="inline-code">README.md</span> 文件中（如果沒有就創建一個）。</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>這樣你的 GitHub 倉庫就能很好地展示你的懷舊聊天室項目了！</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
