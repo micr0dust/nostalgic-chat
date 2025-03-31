@@ -2,7 +2,7 @@
 const WebSocket = require('ws');
 const express = require('express');
 const http = require('http');
-const path = path = require('path'); // 需要 path 模塊來處理文件路徑
+const path = require('path'); // 需要 path 模塊來處理文件路徑
 
 // ---- Express 和 HTTP 伺服器設置 ----
 const app = express();
