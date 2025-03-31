@@ -65,7 +65,41 @@ function connectWebSocket() {
         }
     };
 
-    // ... (ws.onmessage, ws.onclose, ws.onerror 保持不變) ...
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log('收到伺服器訊息:', data); // 調試用
+
+            switch (data.type) {
+                case 'login_error': // 處理登入錯誤 (例如暱稱重複)
+                    handleLoginError(data.message);
+                    break;
+                case 'system':
+                    appendMessage(data.message, 'system');
+                    // 檢查是否是自己的登入成功訊息
+                    if (data.message.includes(`您已成功進入聊天室，暱稱為 "${nickname}"`)) {
+                         showChatInterface(); // 只有在確認登入成功後才顯示聊天介面
+                    }
+                    break;
+                case 'chat':
+                    appendMessage(`<strong>${escapeHtml(data.nickname)}:</strong> ${data.message}`, 'chat');
+                    break;
+                case 'userlist':
+                    updateUserList(data.users);
+                    break;
+                 case 'error': // 處理伺服器發來的其他錯誤
+                    console.error('伺服器錯誤:', data.message);
+                    appendMessage(`伺服器錯誤: ${escapeHtml(data.message)}`, 'system');
+                    break;
+                default:
+                    console.log('收到未知類型的訊息:', data.type);
+            }
+        } catch (error) {
+            console.error('處理伺服器訊息失敗:', error);
+            appendMessage('收到無法解析的訊息', 'system');
+        }
+    };
+
     ws.onclose = (event) => {
         console.log('WebSocket 連接已關閉:', event.reason || `Code: ${event.code}`);
         const reason = event.reason || `Code: ${event.code}`;
