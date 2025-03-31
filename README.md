@@ -1,7 +1,5 @@
 # 懷舊聊天室 (Nostalgic Chat) ✨
 
-# 懷舊聊天室 (Nostalgic Chat) ✨
-
 [![線上體驗](https://img.shields.io/badge/線上體驗-Glitch-brightgreen)](https://nostalgic-chat.glitch.me) [![AI 生成對話紀錄](https://img.shields.io/badge/AI生成對話紀錄-GitHub-blue)](https://micr0dust.github.io/nostalgic-chat)
 
 一個基於 Node.js 和 WebSocket 的簡易網頁聊天室，無需註冊即可加入，旨在重現早期網路聊天室的簡單、即時互動體驗。
